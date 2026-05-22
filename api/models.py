@@ -14,7 +14,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'tipo']
 
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, null=False, blank=False)
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
 
