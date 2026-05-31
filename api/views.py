@@ -1,10 +1,11 @@
 from rest_framework import viewsets
 from .models import Categoria, Produto, VariacaoProduto, User, Pedido, ItemPedido, Carrinho, ItemCarrinho
 from .serializers import CategoriaSerializer, ProdutoSerializer, VariacaoProdutoSerializer, UserSerializer, PedidoSerializer, ItemPedidoSerializer, CarrinhoSerializer, ItemCarrinhoSerializer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from .permissions import IsLojista, IsCliente
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -20,8 +21,13 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     serializer_class = CategoriaSerializer
 
 class ProdutoViewSet(viewsets.ModelViewSet):
-    queryset = Produto.objects.all()
+    queryset = Produto.objects.filter(ativo=True)
     serializer_class = ProdutoSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsAuthenticated()]
+        return [IsLojista()]
 
 class VariacaoProdutoViewSet(viewsets.ModelViewSet):
     queryset = VariacaoProduto.objects.all()

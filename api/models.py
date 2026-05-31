@@ -33,6 +33,7 @@ class Produto(models.Model):
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, related_name='produtos')
     nome = models.CharField(max_length=255)
     descricao = models.TextField(blank=True, null=True)
+    ativo = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
