@@ -21,13 +21,23 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     serializer_class = CategoriaSerializer
 
 class ProdutoViewSet(viewsets.ModelViewSet):
-    queryset = Produto.objects.filter(ativo=True)
     serializer_class = ProdutoSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.tipo == 'lojista':
+            if self.action in ['list', 'retrieve']:
+                return Produto.objects.filter(ativo=True)
+            return Produto.objects.filter(lojista=user, ativo=True)
+        return Produto.objects.filter(ativo=True)
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [IsAuthenticated()]
         return [IsLojista()]
+
+    def perform_create(self, serializer):
+        serializer.save(lojista=self.request.user)
 
 class VariacaoProdutoViewSet(viewsets.ModelViewSet):
     queryset = VariacaoProduto.objects.all()
