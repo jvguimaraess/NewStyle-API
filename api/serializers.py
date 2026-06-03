@@ -10,11 +10,22 @@ class ProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Produto
         fields = '__all__'
-
+        read_only_fields = ['lojista', 'created_at']
+        
 class VariacaoProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = VariacaoProduto
         fields = '__all__'
+
+    def validate_estoque(self, value):
+        if value < 0:
+            raise serializers.ValidationError('O estoque não pode ser negativo.')
+        return value
+
+    def validate_preco(self, value):
+        if value < 0:
+            raise serializers.ValidationError('O preço não pode ser negativo.')
+        return value
 
 class PedidoSerializer(serializers.ModelSerializer):
     class Meta:

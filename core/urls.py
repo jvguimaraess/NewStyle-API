@@ -23,7 +23,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 router = DefaultRouter()
 router.register('categorias', CategoriaViewSet)
-router.register('produtos', ProdutoViewSet)
+router.register('produtos', ProdutoViewSet, basename='produto')
 router.register('variacoes', VariacaoProdutoViewSet)
 router.register('users', UserViewSet)
 router.register('pedidos', PedidoViewSet)
