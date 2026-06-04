@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Categoria, Produto, VariacaoProduto, Pedido, ItemPedido, Carrinho, ItemCarrinho, User
+from .models import Categoria, Produto, VariacaoProduto, Endereco, Pagamento, Pedido, ItemPedido, Carrinho, ItemCarrinho, User
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +26,18 @@ class VariacaoProdutoSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError('O preço não pode ser negativo.')
         return value
+
+class EnderecoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Endereco
+        fields = '__all__'
+        read_only_fields = ['cliente']
+
+class PagamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pagamento
+        fields = '__all__'
+        read_only_fields = ['cliente']
 
 class PedidoSerializer(serializers.ModelSerializer):
     class Meta:

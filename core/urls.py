@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from api.views import cadastro, CategoriaViewSet, ProdutoViewSet, VariacaoProdutoViewSet, UserViewSet, PedidoViewSet, ItemPedidoViewSet, CarrinhoViewSet, ItemCarrinhoViewSet
+from api.views import cadastro, CategoriaViewSet, ProdutoViewSet, VariacaoProdutoViewSet, UserViewSet, EnderecoViewSet, PagamentoViewSet, PedidoViewSet, ItemPedidoViewSet, CarrinhoViewSet, ItemCarrinhoViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
@@ -26,6 +26,8 @@ router.register('categorias', CategoriaViewSet)
 router.register('produtos', ProdutoViewSet, basename='produto')
 router.register('variacoes', VariacaoProdutoViewSet)
 router.register('users', UserViewSet)
+router.register('enderecos', EnderecoViewSet, basename='endereco')
+router.register('pagamentos', PagamentoViewSet, basename='pagamento')
 router.register('pedidos', PedidoViewSet)
 router.register('itens-pedido', ItemPedidoViewSet)
 router.register('carrinhos', CarrinhoViewSet)

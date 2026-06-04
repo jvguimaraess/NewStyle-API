@@ -1,6 +1,6 @@
 from rest_framework import viewsets
-from .models import Categoria, Produto, VariacaoProduto, User, Pedido, ItemPedido, Carrinho, ItemCarrinho
-from .serializers import CategoriaSerializer, ProdutoSerializer, VariacaoProdutoSerializer, UserSerializer, PedidoSerializer, ItemPedidoSerializer, CarrinhoSerializer, ItemCarrinhoSerializer
+from .models import Categoria, Produto, VariacaoProduto, User, Endereco, Pagamento, Pedido, ItemPedido, Carrinho, ItemCarrinho
+from .serializers import CategoriaSerializer, ProdutoSerializer, VariacaoProdutoSerializer, UserSerializer, EnderecoSerializer, PagamentoSerializer, PedidoSerializer, ItemPedidoSerializer, CarrinhoSerializer, ItemCarrinhoSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -53,6 +53,26 @@ class VariacaoProdutoViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+class EnderecoViewSet(viewsets.ModelViewSet):
+    serializer_class = EnderecoSerializer
+    permission_classes = [IsCliente]
+
+    def get_queryset(self):
+        return Endereco.objects.filter(cliente=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(cliente=self.request.user)
+
+class PagamentoViewSet(viewsets.ModelViewSet):
+    serializer_class = PagamentoSerializer
+    permission_classes = [IsCliente]
+
+    def get_queryset(self):
+        return Pagamento.objects.filter(cliente=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(cliente=self.request.user)
 
 class PedidoViewSet(viewsets.ModelViewSet):
     queryset = Pedido.objects.all()
