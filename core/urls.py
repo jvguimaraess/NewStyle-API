@@ -29,7 +29,7 @@ router.register('users', UserViewSet)
 router.register('pedidos', PedidoViewSet)
 router.register('itens-pedido', ItemPedidoViewSet)
 router.register('carrinhos', CarrinhoViewSet)
-router.register('itens-carrinho', ItemCarrinhoViewSet)
+router.register('itens-carrinho', ItemCarrinhoViewSet, basename='itemcarrinho')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

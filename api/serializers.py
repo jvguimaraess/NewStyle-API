@@ -11,7 +11,7 @@ class ProdutoSerializer(serializers.ModelSerializer):
         model = Produto
         fields = '__all__'
         read_only_fields = ['lojista', 'created_at']
-        
+
 class VariacaoProdutoSerializer(serializers.ModelSerializer):
     class Meta:
         model = VariacaoProduto
@@ -46,6 +46,30 @@ class ItemCarrinhoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemCarrinho
         fields = '__all__'
+        read_only_fields = ['carrinho']
+
+    def validate(self, data):
+        variacao = data['variacao']
+        quantidade = data['quantidade']
+
+        if quantidade > variacao.estoque:
+            raise serializers.ValidationError(
+                'Quantidade maior que o estoque disponível.'
+            )
+
+        cliente = self.context['request'].user
+        carrinho = Carrinho.objects.get(cliente=cliente)
+        itens = carrinho.itens.all()
+
+        if itens.exists():
+            lojista_atual = itens.first().variacao.produto.lojista
+            lojista_novo = variacao.produto.lojista
+            if lojista_novo != lojista_atual:
+                raise serializers.ValidationError(
+                    'O carrinho só pode conter produtos de um único lojista.'
+                )
+
+        return data
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

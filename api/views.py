@@ -67,5 +67,13 @@ class CarrinhoViewSet(viewsets.ModelViewSet):
     serializer_class = CarrinhoSerializer
 
 class ItemCarrinhoViewSet(viewsets.ModelViewSet):
-    queryset = ItemCarrinho.objects.all()
     serializer_class = ItemCarrinhoSerializer
+    permission_classes = [IsCliente]
+
+    def get_queryset(self):
+        carrinho = Carrinho.objects.get(cliente=self.request.user)
+        return ItemCarrinho.objects.filter(carrinho=carrinho)
+
+    def perform_create(self, serializer):
+        carrinho = Carrinho.objects.get(cliente=self.request.user)
+        serializer.save(carrinho=carrinho)
