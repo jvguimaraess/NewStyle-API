@@ -77,10 +77,20 @@ class PagamentoViewSet(viewsets.ModelViewSet):
 
 class PedidoViewSet(viewsets.ModelViewSet):
     serializer_class = PedidoSerializer
-    permission_classes = [IsCliente]
+
+    def get_permissions(self):
+        if self.action == 'finalizar':
+            return [IsCliente()]
+        if self.action == 'atualizar_status':
+            return [IsLojista()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
-        return Pedido.objects.filter(cliente=self.request.user)
+        user = self.request.user
+        if user.tipo == 'lojista':
+            return Pedido.objects.filter(
+                itens__variacao__produto__lojista=user).distinct().order_by('created_at')
+        return Pedido.objects.filter(cliente=user)
 
     @action(detail=False, methods=['post'])
     def finalizar(self, request):
@@ -131,6 +141,23 @@ class PedidoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(pedido)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['patch'])
+    def atualizar_status(self, request, pk=None):
+        pedido = self.get_object()
+        novo_status = request.data.get('status')
+
+        STATUS_VALIDOS = ['pendente', 'confirmado', 'cancelado']
+        if novo_status not in STATUS_VALIDOS:
+            return Response(
+                {'detail': 'Status inválido'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        pedido.status = novo_status
+        pedido.save()
+
+        serializer = self.get_serializer(pedido)
+        return Response(serializer.data)
 class ItemPedidoViewSet(viewsets.ModelViewSet):
     queryset = ItemPedido.objects.all()
     serializer_class = ItemPedidoSerializer
