@@ -77,6 +77,8 @@ class PagamentoViewSet(viewsets.ModelViewSet):
 
 class PedidoViewSet(viewsets.ModelViewSet):
     serializer_class = PedidoSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status']
 
     def get_permissions(self):
         if self.action == 'finalizar':
@@ -158,6 +160,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(pedido)
         return Response(serializer.data)
+
 class ItemPedidoViewSet(viewsets.ModelViewSet):
     queryset = ItemPedido.objects.all()
     serializer_class = ItemPedidoSerializer
