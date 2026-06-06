@@ -3,11 +3,12 @@ from .models import Categoria, Produto, VariacaoProduto, User, Endereco, Pagamen
 from .serializers import CategoriaSerializer, ProdutoSerializer, VariacaoProdutoSerializer, UserSerializer, EnderecoSerializer, PagamentoSerializer, PedidoSerializer, ItemPedidoSerializer, CarrinhoSerializer, ItemCarrinhoSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status, viewsets, serializers
+from rest_framework.decorators import action, api_view, permission_classes
 from .permissions import IsLojista, IsCliente
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db import transaction
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -75,8 +76,60 @@ class PagamentoViewSet(viewsets.ModelViewSet):
         serializer.save(cliente=self.request.user)
 
 class PedidoViewSet(viewsets.ModelViewSet):
-    queryset = Pedido.objects.all()
     serializer_class = PedidoSerializer
+    permission_classes = [IsCliente]
+
+    def get_queryset(self):
+        return Pedido.objects.filter(cliente=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def finalizar(self, request):
+        carrinho = Carrinho.objects.get(cliente=request.user)
+        itens = carrinho.itens.all()
+
+        if not itens.exists():
+            return Response(
+                {'detail': 'O carrinho está vazio.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        endereco_id = request.data.get('endereco')
+        pagamento_id = request.data.get('pagamento')
+
+        with transaction.atomic():
+            pedido = Pedido.objects.create(
+                cliente=request.user,
+                endereco_id=endereco_id,
+                pagamento_id=pagamento_id,
+                status='pendente'
+            )
+
+            total = 0
+            for item in itens:
+                if item.quantidade > item.variacao.estoque:
+                    raise serializers.ValidationError(
+                        f'Estoque insuficiente para {item.variacao}.'
+                    )
+
+                ItemPedido.objects.create(
+                    pedido=pedido,
+                    variacao=item.variacao,
+                    quantidade=item.quantidade,
+                    preco_unitario=item.variacao.preco
+                )
+
+                item.variacao.estoque -= item.quantidade
+                item.variacao.save()
+
+                total += item.variacao.preco * item.quantidade
+
+            pedido.total = total
+            pedido.save()
+
+            itens.delete()
+
+        serializer = self.get_serializer(pedido)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class ItemPedidoViewSet(viewsets.ModelViewSet):
     queryset = ItemPedido.objects.all()
