@@ -23,12 +23,12 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 router = DefaultRouter()
 router.register('categorias', CategoriaViewSet)
-router.register('produtos', ProdutoViewSet, basename='produto')
+router.register('products', ProdutoViewSet, basename='produto')
 router.register('variacoes', VariacaoProdutoViewSet)
 router.register('users', UserViewSet)
 router.register('enderecos', EnderecoViewSet, basename='endereco')
-router.register('pagamentos', PagamentoViewSet, basename='pagamento')
-router.register('pedidos', PedidoViewSet, basename='pedido')
+router.register('payments', PagamentoViewSet, basename='pagamento')
+router.register('orders', PedidoViewSet, basename='pedido')
 router.register('itens-pedido', ItemPedidoViewSet)
 router.register('carrinhos', CarrinhoViewSet)
 router.register('itens-carrinho', ItemCarrinhoViewSet, basename='itemcarrinho')
@@ -36,9 +36,9 @@ router.register('itens-carrinho', ItemCarrinhoViewSet, basename='itemcarrinho')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/login/', TokenObtainPairView.as_view(), name='login'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/cadastro/', cadastro, name='cadastro'),
+    path('api/auth/register/', cadastro, name='register'),
     path('api/auth/forgot-password/', forgot_password, name='forgot_password'),
     path('api/auth/reset-password/', reset_password, name='reset_password'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
