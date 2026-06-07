@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from api.views import cadastro, CategoriaViewSet, ProdutoViewSet, VariacaoProdutoViewSet, UserViewSet, EnderecoViewSet, PagamentoViewSet, PedidoViewSet, ItemPedidoViewSet, CarrinhoViewSet, ItemCarrinhoViewSet
+from api.views import cadastro, forgot_password, reset_password, CategoriaViewSet, ProdutoViewSet, VariacaoProdutoViewSet, UserViewSet, EnderecoViewSet, PagamentoViewSet, PedidoViewSet, ItemPedidoViewSet, CarrinhoViewSet, ItemCarrinhoViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
@@ -39,6 +39,8 @@ urlpatterns = [
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/cadastro/', cadastro, name='cadastro'),
+    path('api/auth/forgot-password/', forgot_password, name='forgot_password'),
+    path('api/auth/reset-password/', reset_password, name='reset_password'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

@@ -9,6 +9,10 @@ from .permissions import IsLojista, IsCliente
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db import transaction
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -18,6 +22,78 @@ def cadastro(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def forgot_password(request):
+    email = request.data.get('email')
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response(
+            {'detail': 'Se o email existir, um link será enviado.'},
+            status=status.HTTP_200_OK
+        )
+
+    token = PasswordResetTokenGenerator().make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+    link = f'http://localhost:8000/api/auth/reset-password/?uid={uid}&token={token}'
+
+    send_mail(
+        'Recuperação de senha',
+        f'Use o link para redefinir sua senha: {link}',
+        None,
+        [email],
+    )
+
+    return Response(
+        {'detail': 'Se o email existir, um link será enviado.'},
+        status=status.HTTP_200_OK
+    )
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    uid = request.data.get('uid')
+    token = request.data.get('token')
+    nova_senha = request.data.get('nova_senha')
+
+    if not uid or not token or not nova_senha:
+        return Response(
+            {'deatil': 'Dados incompletos.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user_id = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=user_id)
+    except (User.DoesNotExist, ValueError, TypeError):
+        return Response(
+            {'detail': 'Link inválido.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not PasswordResetTokenGenerator().check_token(user, token):
+        return Response(
+            {'detail': 'Token inválido ou expirado.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if len(nova_senha) < 8:
+        return Response(
+            {'detail': 'A senha deve ter no mínimo 8 caracteres.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user.set_password(nova_senha)
+    user.save()
+
+    return Response(
+        {'detail': 'Senha redefinida com sucesso.'},
+        status=status.HTTP_200_OK
+    )
     
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
