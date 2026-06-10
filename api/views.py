@@ -15,6 +15,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.conf import settings
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -41,7 +42,7 @@ def forgot_password(request):
     token = PasswordResetTokenGenerator().make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-    link = f'http://localhost:8000/api/auth/reset-password/?uid={uid}&token={token}'
+    link = f'{settings.FRONTEND_URL}/api/auth/reset-password/?uid={uid}&token={token}'
 
     send_mail(
         'Recuperação de senha',
