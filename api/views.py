@@ -1,18 +1,20 @@
-from rest_framework import viewsets
 from .models import Categoria, Produto, VariacaoProduto, User, Endereco, Pagamento, Pedido, ItemPedido, Carrinho, ItemCarrinho
 from .serializers import CategoriaSerializer, ProdutoSerializer, VariacaoProdutoSerializer, UserSerializer, EnderecoSerializer, PagamentoSerializer, PedidoSerializer, ItemPedidoSerializer, CarrinhoSerializer, ItemCarrinhoSerializer
+from .permissions import IsLojista, IsCliente
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status, viewsets, serializers
 from rest_framework.decorators import action, api_view, permission_classes
-from .permissions import IsLojista, IsCliente
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db import transaction
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -92,6 +94,52 @@ def reset_password(request):
 
     return Response(
         {'detail': 'Senha redefinida com sucesso.'},
+        status=status.HTTP_200_OK
+    )
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def contato(request):
+    nome = request.data.get('nome')
+    email = request.data.get('email')
+    assunto = request.data.get('assunto')
+    mensagem = request.data.get('mensagem')
+
+    if not all([nome, email, assunto, mensagem]):
+        return Response(
+            {'detail': 'Todos os campos são obrigatórios.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        validate_email(email)
+    except DjangoValidationError:
+        return Response(
+            {'detail': 'Email inválido.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if len(mensagem) < 10 or len(mensagem) > 1000:
+        return Response(
+            {'detail': 'A mensagem deve ter entre 10 e 1000 caracteres.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        send_mail(
+            f'[Contato] {assunto}',
+            f'Nome: {nome}\nEmail: {email}\n\nMensagem:\n{mensagem}',
+            None,
+            ['joaoalbarello@ejectufrn.com.br'],
+        )
+    except Exception:
+        return Response(
+            {'detail': 'Erro ao enviar a mensagem. Tente novamente.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    return Response(
+        {'detail': 'Mensagem enviada com sucesso.'},
         status=status.HTTP_200_OK
     )
     
