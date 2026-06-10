@@ -34,10 +34,20 @@ class EnderecoSerializer(serializers.ModelSerializer):
         read_only_fields = ['cliente']
 
 class PagamentoSerializer(serializers.ModelSerializer):
+    detalhes_mascarado = serializers.SerializerMethodField()
+    
     class Meta:
         model = Pagamento
-        fields = '__all__'
+        fields = ['id', 'tipo', 'detalhes', 'detalhes_mascarado', 'cliente']
         read_only_fields = ['cliente']
+        extra_kwargs = {
+            'detalhes': {'write_only': True}
+        }
+
+    def get_detalhes_mascarado(self, obj):
+        if len(obj.detalhes) <= 4:
+            return obj.detalhes
+        return '*' * (len(obj.detalhes) - 4) + obj.detalhes[-4:]
 
 class PedidoSerializer(serializers.ModelSerializer):
     class Meta:
