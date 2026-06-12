@@ -20,6 +20,7 @@ from django.conf import settings
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def cadastro(request):
+    """Cadastra um novo usuário (lojista ou cliente). Endpoint público."""
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -29,6 +30,11 @@ def cadastro(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def forgot_password(request):
+    """
+    Solicita recuperação de senha. Gera um token seguro e envia
+    um link de redefinição para o email informado. Por segurança,
+    não revela se o email está ou não cadastrado.
+    """
     email = request.data.get('email')
 
     try:
@@ -59,13 +65,17 @@ def forgot_password(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def reset_password(request):
+    """
+    Redefine a senha do usuário a partir de um token válido.
+    Valida o token, a força da nova senha, e a salva criptografada.
+    """
     uid = request.data.get('uid')
     token = request.data.get('token')
     nova_senha = request.data.get('nova_senha')
 
     if not uid or not token or not nova_senha:
         return Response(
-            {'deatil': 'Dados incompletos.'},
+            {'detail': 'Dados incompletos.'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -101,6 +111,10 @@ def reset_password(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def contato(request):
+    """
+    Recebe uma mensagem de contato e a envia por email para a
+    plataforma. Valida campos obrigatórios e tamanho da mensagem.
+    """
     nome = request.data.get('nome')
     email = request.data.get('email')
     assunto = request.data.get('assunto')
@@ -145,10 +159,24 @@ def contato(request):
     )
     
 class CategoriaViewSet(viewsets.ModelViewSet):
+    """
+    Gerencia categorias de produtos. Qualquer usuário autenticado pode
+    listar e visualizar; apenas lojistas podem criar, editar e remover.
+    """
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsAuthenticated()]
+        return [IsLojista()]
+
 class ProdutoViewSet(viewsets.ModelViewSet):
+    """
+    Gerencia produtos. Clientes e lojistas podem listar e visualizar;
+    apenas lojistas podem criar, editar e remover seus próprios produtos.
+    Suporta filtro por categoria e busca por nome/descrição.
+    """
     serializer_class = ProdutoSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['categoria']
@@ -157,6 +185,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
+        """Lojista vê todos na listagem, mas só edita os seus. Cliente vê apenas ativos."""
         user = self.request.user
         if user.tipo == 'lojista':
             if self.action in ['list', 'retrieve']:
@@ -173,14 +202,39 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         serializer.save(lojista=self.request.user)
 
 class VariacaoProdutoViewSet(viewsets.ModelViewSet):
-    queryset = VariacaoProduto.objects.all()
+    """
+    Gerencia variações de produtos (tamanho, cor, estoque, preço).
+    Todos os autenticados podem visualizar; apenas o lojista dono
+    do produto pode criar, editar e remover variações.
+    """
     serializer_class = VariacaoProdutoSerializer
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsAuthenticated()]
+        return [IsLojista()]
+
+    def get_queryset(self):
+        """Na edição/remoção, o lojista só acessa variações dos seus produtos."""
+        user = self.request.user
+        if user.tipo == 'lojista' and self.action not in ['list', 'retrieve']:
+            return VariacaoProduto.objects.filter(produto__lojista=user)
+        return VariacaoProduto.objects.all()
+
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    """
+    Permite que o usuário logado visualize e edite os próprios dados.
+    Cada usuário só acessa suas próprias informações, nunca as de outros.
+    """
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'put', 'patch']
+
+    def get_queryset(self):
+        return User.objects.filter(pk=self.request.user.pk)
 
 class EnderecoViewSet(viewsets.ModelViewSet):
+    """Gerencia os endereços do cliente logado."""
     serializer_class = EnderecoSerializer
     permission_classes = [IsCliente]
 
@@ -191,6 +245,7 @@ class EnderecoViewSet(viewsets.ModelViewSet):
         serializer.save(cliente=self.request.user)
 
 class PagamentoViewSet(viewsets.ModelViewSet):
+    """Gerencia os métodos de pagamento do cliente. Mascara dados sensíveis na resposta."""
     serializer_class = PagamentoSerializer
     permission_classes = [IsCliente]
 
@@ -201,6 +256,10 @@ class PagamentoViewSet(viewsets.ModelViewSet):
         serializer.save(cliente=self.request.user)
 
 class PedidoViewSet(viewsets.ModelViewSet):
+    """
+    Gerencia pedidos. Clientes finalizam compras e veem seus pedidos;
+    lojistas veem os pedidos que contêm seus produtos e atualizam o status.
+    """
     serializer_class = PedidoSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status']
@@ -221,6 +280,11 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def finalizar(self, request):
+        """
+        Finaliza a compra a partir do carrinho do cliente. Cria o pedido,
+        os itens, baixa o estoque e esvazia o carrinho, tudo dentro de
+        uma transação atômica para garantir consistência.
+        """
         carrinho = Carrinho.objects.get(cliente=request.user)
         itens = carrinho.itens.all()
 
@@ -270,6 +334,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'])
     def atualizar_status(self, request, pk=None):
+        """Atualiza o status de um pedido. Restrito ao lojista."""
         pedido = self.get_object()
         novo_status = request.data.get('status')
 
@@ -287,14 +352,35 @@ class PedidoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class ItemPedidoViewSet(viewsets.ModelViewSet):
-    queryset = ItemPedido.objects.all()
+    """
+    Exibe os itens de pedido. Cliente vê os itens dos seus pedidos;
+    lojista vê os itens que contêm seus produtos. Somente leitura.
+    """
     serializer_class = ItemPedidoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.tipo == 'lojista':
+            return ItemPedido.objects.filter(variacao__produto__lojista=user)
+        return ItemPedido.objects.filter(pedido__cliente=user)
 
 class CarrinhoViewSet(viewsets.ModelViewSet):
-    queryset = Carrinho.objects.all()
+    """
+    Exibe o carrinho do cliente logado. Somente leitura — a manipulação
+    de itens é feita pelo endpoint de itens do carrinho.
+    """
     serializer_class = CarrinhoSerializer
+    permission_classes = [IsCliente]
+
+    def get_queryset(self):
+        return Carrinho.objects.filter(cliente=self.request.user)
 
 class ItemCarrinhoViewSet(viewsets.ModelViewSet):
+    """
+    Gerencia os itens do carrinho do cliente logado. Valida estoque
+    e garante que o carrinho contenha produtos de um único lojista.
+    """
     serializer_class = ItemCarrinhoSerializer
     permission_classes = [IsCliente]
 

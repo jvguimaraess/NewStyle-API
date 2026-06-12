@@ -24,13 +24,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 router = DefaultRouter()
 router.register('categorias', CategoriaViewSet)
 router.register('products', ProdutoViewSet, basename='produto')
-router.register('variacoes', VariacaoProdutoViewSet)
-router.register('users', UserViewSet)
+router.register('variacoes', VariacaoProdutoViewSet, basename='variacao')
+router.register('users', UserViewSet, basename='user')
 router.register('enderecos', EnderecoViewSet, basename='endereco')
 router.register('payments', PagamentoViewSet, basename='pagamento')
 router.register('orders', PedidoViewSet, basename='pedido')
-router.register('itens-pedido', ItemPedidoViewSet)
-router.register('carrinhos', CarrinhoViewSet)
+router.register('itens-pedido', ItemPedidoViewSet, basename='itempedido')
+router.register('carrinhos', CarrinhoViewSet, basename='carrinho')
 router.register('itens-carrinho', ItemCarrinhoViewSet, basename='itemcarrinho')
 
 urlpatterns = [
