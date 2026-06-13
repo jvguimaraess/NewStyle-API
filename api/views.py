@@ -1,10 +1,9 @@
 from .models import Categoria, Produto, VariacaoProduto, User, Endereco, Pagamento, Pedido, ItemPedido, Carrinho, ItemCarrinho
 from .serializers import CategoriaSerializer, ProdutoSerializer, VariacaoProdutoSerializer, UserSerializer, EnderecoSerializer, PagamentoSerializer, PedidoSerializer, ItemPedidoSerializer, CarrinhoSerializer, ItemCarrinhoSerializer
 from .permissions import IsLojista, IsCliente
-from rest_framework import viewsets
+from rest_framework import status, viewsets, serializers
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import status, viewsets, serializers
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -334,14 +333,29 @@ class PedidoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'])
     def atualizar_status(self, request, pk=None):
-        """Atualiza o status de um pedido. Restrito ao lojista."""
+        """
+        Atualiza o status de um pedido seguindo um fluxo válido de transições.
+        Restrito ao lojista.
+        """
         pedido = self.get_object()
         novo_status = request.data.get('status')
 
-        STATUS_VALIDOS = ['pendente', 'confirmado', 'cancelado']
-        if novo_status not in STATUS_VALIDOS:
+        # transições permitidas a partir de cada status
+        TRANSICOES_VALIDAS = {
+            'pendente': ['confirmado', 'cancelado'],
+            'confirmado': ['cancelado'],
+            'cancelado': [],
+        }
+
+        if novo_status not in ['pendente', 'confirmado', 'cancelado']:
             return Response(
-                {'detail': 'Status inválido'},
+                {'detail': 'Status inválido.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if novo_status not in TRANSICOES_VALIDAS[pedido.status]:
+            return Response(
+                {'detail': f'Transição inválida: de "{pedido.status}" para "{novo_status}".'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -351,7 +365,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(pedido)
         return Response(serializer.data)
 
-class ItemPedidoViewSet(viewsets.ModelViewSet):
+class ItemPedidoViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Exibe os itens de pedido. Cliente vê os itens dos seus pedidos;
     lojista vê os itens que contêm seus produtos. Somente leitura.
@@ -365,9 +379,9 @@ class ItemPedidoViewSet(viewsets.ModelViewSet):
             return ItemPedido.objects.filter(variacao__produto__lojista=user)
         return ItemPedido.objects.filter(pedido__cliente=user)
 
-class CarrinhoViewSet(viewsets.ModelViewSet):
+class CarrinhoViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Exibe o carrinho do cliente logado. Somente leitura — a manipulação
+    Exibe o carrinho do cliente logado. Somente leitura, a manipulação
     de itens é feita pelo endpoint de itens do carrinho.
     """
     serializer_class = CarrinhoSerializer
