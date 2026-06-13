@@ -2,17 +2,20 @@ from rest_framework import serializers
 from .models import Categoria, Produto, VariacaoProduto, Endereco, Pagamento, Pedido, ItemPedido, Carrinho, ItemCarrinho, User
 
 class CategoriaSerializer(serializers.ModelSerializer):
+    """Serializa categorias de produtos."""
     class Meta:
         model = Categoria
         fields = '__all__'
 
 class ProdutoSerializer(serializers.ModelSerializer):
+    """Serializa produtos. O lojista é preenchido automaticamente e não é editável."""
     class Meta:
         model = Produto
         fields = '__all__'
         read_only_fields = ['lojista', 'created_at']
 
 class VariacaoProdutoSerializer(serializers.ModelSerializer):
+    """Serializa variações de produto. Valida que estoque e preço não sejam negativos."""
     class Meta:
         model = VariacaoProduto
         fields = '__all__'
@@ -28,12 +31,14 @@ class VariacaoProdutoSerializer(serializers.ModelSerializer):
         return value
 
 class EnderecoSerializer(serializers.ModelSerializer):
+    """Serializa endereços."""
     class Meta:
         model = Endereco
         fields = '__all__'
         read_only_fields = ['cliente']
 
 class PagamentoSerializer(serializers.ModelSerializer):
+    """Serializa métodos de pagamento. Mascara os detalhes sensíveis na resposta."""
     detalhes_mascarado = serializers.SerializerMethodField()
     
     class Meta:
@@ -50,21 +55,28 @@ class PagamentoSerializer(serializers.ModelSerializer):
         return '*' * (len(obj.detalhes) - 4) + obj.detalhes[-4:]
 
 class PedidoSerializer(serializers.ModelSerializer):
+    """Serializa pedidos. Campos calculados e de controle são somente leitura."""
     class Meta:
         model = Pedido
         fields = '__all__'
-
+        read_only_fields = ['cliente', 'total', 'status', 'created_at']
 class ItemPedidoSerializer(serializers.ModelSerializer):
+    """Serializa os itens de um pedido (somente leitura na API)."""
     class Meta:
         model = ItemPedido
         fields = '__all__'
 
 class CarrinhoSerializer(serializers.ModelSerializer):
+    """Serializa o carrinho do cliente (somente leitura na API)."""
     class Meta:
         model = Carrinho
         fields = '__all__'
 
 class ItemCarrinhoSerializer(serializers.ModelSerializer):
+    """
+    Serializa itens do carrinho. Valida o estoque disponível e garante
+    que o carrinho contenha produtos de um único lojista.
+    """
     class Meta:
         model = ItemCarrinho
         fields = '__all__'
@@ -94,6 +106,10 @@ class ItemCarrinhoSerializer(serializers.ModelSerializer):
         return data
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializa usuários. A senha é somente escrita (nunca retornada) e
+    salva de forma criptografada no cadastro.
+    """
     password = serializers.CharField(write_only=True)
 
     class Meta:
