@@ -116,10 +116,19 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'username', 'tipo', 'created_at', 'password']
 
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError('A senha deve ter 8 dígitos ou mais.')
+        return value
+
+    def validate_username(self, value):
+        if len(value.strip()) < 3:
+            raise serializers.ValidationError('O username deve ter no mínimo 3 caracteres.')
+        return value
+
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
         user.save()
         return user
-

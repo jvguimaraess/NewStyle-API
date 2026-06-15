@@ -32,8 +32,8 @@ Projeto desenvolvido como desafio do processo seletivo de trainee de Backend da 
 
 A NewStyle API é o backend de um serviço de e-commerce de roupas. Ela oferece toda a lógica de negócio necessária para uma loja virtual funcional, com dois tipos de usuário:
 
-- **Lojista** — responsável por cadastrar e gerenciar produtos, variações e estoque, além de visualizar e atualizar o status dos pedidos que contêm seus produtos.
-- **Cliente** — navega pelo catálogo, gerencia seu carrinho, cadastra endereços e métodos de pagamento, e finaliza compras.
+- **Lojista**: responsável por cadastrar e gerenciar produtos, variações e estoque, além de visualizar e atualizar o status dos pedidos que contêm seus produtos.
+- **Cliente**: navega pelo catálogo, gerencia seu carrinho, cadastra endereços e métodos de pagamento, e finaliza compras.
 
 A API foi construída seguindo os casos de uso definidos pela Eject, com foco em segurança (autenticação JWT, criptografia de senha), boas práticas de modelagem e regras de negócio bem definidas.
 
@@ -41,31 +41,31 @@ A API foi construída seguindo os casos de uso definidos pela Eject, com foco em
 
 ## Funcionalidades
 
-- **Autenticação JWT** — cadastro, login e renovação de token
-- **Recuperação de senha** — via envio de email com token seguro de uso único
-- **Gerenciamento de produtos** — CRUD completo restrito ao lojista dono
-- **Variações e estoque** — controle de estoque por variação (tamanho + cor)
-- **Navegação e busca** — listagem de produtos com filtros por categoria e busca por texto
-- **Carrinho de compras** — com validação de estoque e regra de lojista único
-- **Realização de pedidos** — finalização com transação atômica e baixa de estoque
-- **Gerenciamento de pedidos (lojista)** — atualização de status e filtro
-- **Métodos de pagamento** — CRUD com mascaramento de dados sensíveis
-- **Email de contato** — endpoint público para mensagens à plataforma
-- **Documentação interativa** — Swagger/OpenAPI
+- **Autenticação JWT**: cadastro, login e renovação de token
+- **Recuperação de senha**: via envio de email com token seguro de uso único
+- **Gerenciamento de produtos**: CRUD completo restrito ao lojista dono
+- **Variações e estoque**: controle de estoque por variação (tamanho + cor)
+- **Navegação e busca**: listagem de produtos com filtros por categoria e busca por texto
+- **Carrinho de compras**: com validação de estoque e regra de lojista único
+- **Realização de pedidos**: finalização com transação atômica e baixa de estoque
+- **Gerenciamento de pedidos (lojista)**: atualização de status e filtro
+- **Métodos de pagamento**: CRUD com mascaramento de dados sensíveis
+- **Email de contato**: endpoint público para mensagens à plataforma
+- **Documentação interativa**: Swagger/OpenAPI
 
 ---
 
 ## Tecnologias
 
 - **Python 3**
-- **Django** — framework web
-- **Django REST Framework** — construção da API REST
-- **Simple JWT** — autenticação via JSON Web Tokens
-- **drf-spectacular** — geração automática da documentação Swagger/OpenAPI
-- **django-filter** — filtros de busca nos endpoints
-- **python-decouple** — gerenciamento de variáveis de ambiente
-- **SQLite** — banco de dados
-- **PythonAnywhere** — hospedagem (deploy)
+- **Django**: framework web
+- **Django REST Framework**: construção da API REST
+- **Simple JWT**: autenticação via JSON Web Tokens
+- **drf-spectacular**: geração automática da documentação Swagger
+- **django-filter**: filtros de busca nos endpoints
+- **python-decouple**: gerenciamento de variáveis de ambiente
+- **SQLite**: banco de dados
+- **PythonAnywhere**: hospedagem (deploy)
 
 ---
 
@@ -224,13 +224,12 @@ Para acessar endpoints protegidos, faça login, copie o `access` token retornado
 
 Este projeto foi desenvolvido em paralelo com o estudo das tecnologias envolvidas. As principais fontes utilizadas foram:
 
-- **Alura** — curso de Python aplicando Orientação a Objetos
-- **Udemy** — Curso de Django Web Framework e Django REST Framework
-- **Documentação oficial do Django** — https://docs.djangoproject.com
-- **Documentação oficial do Django REST Framework** — https://www.django-rest-framework.org
+- **Alura**: curso de Python aplicando Orientação a Objetos e Django REST Framework
+- **Udemy**: Curso de Django REST Framework
+- **Documentação oficial do Django REST Framework**: https://www.django-rest-framework.org
 - Artigos de apoio sobre boas práticas de modelagem e custom user models no Django
 
-Durante o desenvolvimento, utilizei a IA **Claude (Anthropic)** como ferramenta de tutoria — para esclarecer conceitos, revisar código e orientar decisões técnicas. Todo o código foi escrito, compreendido e testado por mim, com a IA atuando como apoio ao aprendizado, e não como gerador automático da solução.
+Durante o desenvolvimento, utilizei a IA **Claude (Anthropic)** como ferramenta de tutoria para esclarecer conceitos, revisar código e orientar decisões técnicas. Todo o código foi escrito, compreendido e testado por mim, com a IA atuando como apoio ao aprendizado, e não como gerador automático da solução.
 
 ---
 

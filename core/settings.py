@@ -26,7 +26,6 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
 
-    # nosso app
     'api',
 ]
 
