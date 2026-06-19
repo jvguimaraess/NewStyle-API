@@ -6,7 +6,7 @@
 ![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=jsonwebtokens&logoColor=white)
 ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=flat&logo=swagger&logoColor=black)
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=flat&logo=sqlite&logoColor=white)
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![Status](https://img.shields.io/badge/status-finalizado-green)
 
 > API REST para um e-commerce de roupas, desenvolvida com Django REST Framework. A plataforma funciona como um marketplace, permitindo que lojistas gerenciem seus produtos e que clientes naveguem pelo catálogo, montem carrinhos e realizem pedidos.
 
